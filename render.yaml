@@ -1,0 +1,14 @@
+# Render Blueprint — deploy this service as a Docker web service.
+# In the Render dashboard: New + → Blueprint → point at this repo/folder.
+services:
+  - type: web
+    name: sqaaf-report-pdf
+    runtime: docker
+    dockerfilePath: ./Dockerfile
+    plan: starter        # needs ~512MB+; do NOT use the smallest free tier for Chromium
+    healthCheckPath: /health
+    envVars:
+      - key: REPORT_SERVICE_KEY
+        generateValue: true   # Render generates a secret; copy it into the Laravel .env
+      - key: RENDER_SETTLE_MS
+        value: "600"

@@ -1,0 +1,17 @@
+{
+  "name": "sqaaf-report-pdf-service",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Headless-Chromium PDF microservice for the SQAAF report. Receives fully-built report HTML over HTTP and returns an A4 PDF.",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "dependencies": {
+    "express": "^4.19.2",
+    "puppeteer": "^23.6.0"
+  }
+}
