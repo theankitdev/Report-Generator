@@ -26,6 +26,31 @@ const ASSETS_DIR = path.join(__dirname, 'assets');
 const PORT = Number(process.env.PORT) || 3000;
 const API_KEY = process.env.REPORT_SERVICE_KEY || '';
 const NAV_TIMEOUT = Number(process.env.RENDER_TIMEOUT_MS) || 60000;
+
+// The report template asks for "Segoe UI" (a Windows-only font) with a generic
+// sans-serif fallback, so on a Linux renderer it would fall back to whatever
+// default sans font exists. We bundle Inter (assets/fonts/) and inject it as
+// the page font so every PDF looks identical regardless of host. The relative
+// ./fonts/ URLs resolve because the HTML is written into assets/ before render.
+const INTER_STYLE = `<style id="inter-font-override">
+@font-face{font-family:'Inter';font-style:normal;font-weight:400;src:url('./fonts/inter-400.woff2') format('woff2');}
+@font-face{font-family:'Inter';font-style:normal;font-weight:500;src:url('./fonts/inter-500.woff2') format('woff2');}
+@font-face{font-family:'Inter';font-style:normal;font-weight:600;src:url('./fonts/inter-600.woff2') format('woff2');}
+@font-face{font-family:'Inter';font-style:normal;font-weight:700;src:url('./fonts/inter-700.woff2') format('woff2');}
+@font-face{font-family:'Inter';font-style:normal;font-weight:800;src:url('./fonts/inter-800.woff2') format('woff2');}
+body,[data-page],button,p,span,div,a,li,td,th,text,h1,h2,h3,h4,h5,h6{font-family:'Inter',system-ui,-apple-system,sans-serif !important;}
+</style>`;
+
+/** Force the report to render in the bundled Inter font. */
+function injectInterFont(html) {
+  if (html.includes('id="inter-font-override"')) {
+    return html; // already injected
+  }
+  if (html.includes('</head>')) {
+    return html.replace('</head>', INTER_STYLE + '</head>');
+  }
+  return INTER_STYLE + html; // no <head> — prepend so it still applies
+}
 // Extra settle time after network idle so the client-side template
 // (support.js / DCLogic) finishes building the DOM before we print.
 const SETTLE_MS = Number(process.env.RENDER_SETTLE_MS) || 600;
@@ -71,7 +96,7 @@ app.post('/render', async (req, res) => {
   let page = null;
 
   try {
-    await writeFile(tmpFile, html, 'utf8');
+    await writeFile(tmpFile, injectInterFont(html), 'utf8');
 
     const browser = await getBrowser();
     page = await browser.newPage();
