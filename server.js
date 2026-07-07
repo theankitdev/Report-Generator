@@ -87,6 +87,7 @@ app.post('/render', async (req, res) => {
   }
 
   const html = req.body && req.body.html;
+  const title = req.body?.title || 'ERF';
   if (typeof html !== 'string' || html.trim() === '') {
     return res.status(400).json({ error: 'html is required' });
   }
@@ -106,6 +107,10 @@ app.post('/render', async (req, res) => {
       timeout: NAV_TIMEOUT,
     });
 
+    await page.evaluate((docTitle) => {
+      document.title = docTitle;
+    }, title);
+
     if (SETTLE_MS > 0) {
       await new Promise((r) => setTimeout(r, SETTLE_MS));
     }
@@ -123,9 +128,9 @@ app.post('/render', async (req, res) => {
     res.status(500).json({ error: 'render failed', detail: String(err && err.message ? err.message : err) });
   } finally {
     if (page) {
-      await page.close().catch(() => {});
+      await page.close().catch(() => { });
     }
-    await unlink(tmpFile).catch(() => {});
+    await unlink(tmpFile).catch(() => { });
   }
 });
 
